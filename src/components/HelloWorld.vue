@@ -1,47 +1,112 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-vuex" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
-  </div>
+  <b-container>
+    <b-navbar toggleable="lg" type="dark" variant="">
+      <b-navbar-brand href="#">Spacestagram</b-navbar-brand>
+
+    </b-navbar>
+
+  <b-card-group deck>
+    <b-card v-for="image in images" :key="image.id" :title="getTitle(image)" 
+      :img-src="getUrl(image)" img-alt="Image" img-top>
+      <b-card-text>
+        {{ getDesc(image) }}
+      </b-card-text>
+      <template #footer>
+        <b-button :class='{ "liked": image.liked, "like-button": true }' @click="onLike(image)">
+        <small class="">
+          <b-icon icon="hand-thumbs-up" class="" variant="info"></b-icon>
+          {{ image.liked ? "Liked": "Like" }}
+        </small>
+        </b-button>
+      </template>
+    </b-card>
+
+   
+  </b-card-group>
+
+  </b-container>
 </template>
 
 <script>
+import { BContainer } from 'bootstrap-vue'
+import { BNavbar } from 'bootstrap-vue'
+import { getImage } from './../api/api.js'
+const LIKED_IDS = "LIKED_IDS"
 export default {
   name: 'HelloWorld',
   props: {
     msg: String
+  },
+  components: {
+    BContainer,
+    BNavbar
+  },
+  mounted() {
+    this.loadImages()
+  },
+  data() {
+    return {
+      count: 0,
+      images: []
+    }
+  },
+  methods: {
+    loadImages() {
+      getImage().then((data) => {
+        this.renderImages(data);
+        let likedIds = localStorage.getItem(LIKED_IDS);
+        if (likedIds) {
+          let set = new Set(JSON.parse(likedIds));
+          for (let image of this.images) {
+            if (set.has(image.data[0].nasa_id)) {
+              image.liked = true;
+            }
+          }
+        }
+      });
+    },
+    renderImages(data) {
+      this.images = data.data.collection.items.filter(item => item.data[0].media_type === "image").map(item => {
+        return {
+          ...item,
+          liked: false
+        };
+      });
+
+    },
+    getUrl(item) {
+      let id = item.data[0].nasa_id;
+      return `http://images-assets.nasa.gov/image/${id}/${id}~orig.jpg`;
+    },
+    getTitle(item) {
+      return item.data[0].title;
+    },
+    getDesc(item) { 
+      return item.data[0].description.substr(0, 250) + '...';
+    },
+    onLike(item) {
+      let id = item.data[0].nasa_id;
+      for (let image of this.images) {
+        if (id === image.data[0].nasa_id) {
+          image.liked = !image.liked;
+          localStorage.setItem(LIKED_IDS, JSON.stringify(this.likedIds));
+          break;
+        }
+      }
+
+    }
+  },
+  computed: {
+    likedIds() {
+      return this.images.filter(image => image.liked).map(image => image.data[0].nasa_id);
+    }
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
+$red: #ff1744;
 h3 {
   margin: 40px 0 0;
 }
@@ -54,6 +119,46 @@ li {
   margin: 0 10px;
 }
 a {
-  color: #42b983;
+  // color: #42b983;
+}
+.navbar-dark .navbar-brand {
+  color: green;
+}
+.card-deck {
+  display: flex;
+  flex-wrap: wrap;
+  .card {
+    // flex: 1;
+    padding: 5px;
+    flex: 1;
+    flex-basis: 33.333333%;
+    // width: 33%;
+    img {
+      height: 50%;
+    }
+  }
+}
+.like-button, .like-button:focus {
+  color: white;
+  background-color: blue;
+  small {
+    svg {
+      fill: white;
+    }
+  }
+}
+.like-button:hover, .like-button.liked {
+  background-color: $red;
+}
+.like-button.liked { 
+  svg {
+    animation: spin 1s linear 1;
+  }
+}
+@keyframes spin { 
+  100% { 
+    -webkit-transform: rotate(360deg); 
+    transform:rotate(360deg); 
+  } 
 }
 </style>
