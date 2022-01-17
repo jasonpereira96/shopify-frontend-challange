@@ -2,7 +2,7 @@
   "name": "nasa",
   "version": "0.1.0",
   "private": true,
-  "wst": "/",
+  "wst": "/dist/",
   "homepage": "https://github.com/jasonpereira96/shopify-frontend-challange",
   "scripts": {
     "serve": "vue-cli-service serve",
