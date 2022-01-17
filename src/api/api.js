@@ -6,12 +6,14 @@ const axiosConfig = axios.create({
     baseURL: `https://images-api.nasa.gov/search`,
     params: {
         // api_key: API_KEY,
-        q: "earth"
     }
 })
 
-export function getImage() {
+export function getImage(searchText='earth') {
     return axiosConfig({
-        url: ''
+        url: '',
+        params: {
+            q: searchText
+        }
     })
 }

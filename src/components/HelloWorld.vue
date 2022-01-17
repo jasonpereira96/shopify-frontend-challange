@@ -2,7 +2,9 @@
   <b-container>
     <b-navbar toggleable="lg" type="dark" variant="">
       <b-navbar-brand href="#">Spacestagram</b-navbar-brand>
-
+      <b-form-input size="sm" class="mr-sm-2 search-box" v-model="searchText" placeholder="Search"
+      v-on:keyup.enter="onSearch"></b-form-input>
+      <b-button size="sm" class="my-2 my-sm-0" type="button" @click="onSearch">Search</b-button>
     </b-navbar>
 
   <b-card-group deck>
@@ -18,6 +20,9 @@
           {{ image.liked ? "Liked": "Like" }}
         </small>
         </b-button>
+        <div class="date">
+          {{ getDateCreated(image) }}
+        </div>
       </template>
     </b-card>
 
@@ -30,6 +35,7 @@
 <script>
 import { BContainer } from 'bootstrap-vue'
 import { BNavbar } from 'bootstrap-vue'
+import moment from 'moment'
 import { getImage } from './../api/api.js'
 const LIKED_IDS = "LIKED_IDS"
 export default {
@@ -47,21 +53,22 @@ export default {
   data() {
     return {
       count: 0,
+      searchText: "earth",
       images: []
     }
   },
   methods: {
     loadImages() {
-      getImage().then((data) => {
+      getImage(this.searchText).then((data) => {
         this.renderImages(data);
         let likedIds = localStorage.getItem(LIKED_IDS);
         if (likedIds) {
-          let set = new Set(JSON.parse(likedIds));
-          for (let image of this.images) {
-            if (set.has(image.data[0].nasa_id)) {
-              image.liked = true;
-            }
-          }
+          // let set = new Set(JSON.parse(likedIds));
+          // for (let image of this.images) {
+          //   if (set.has(image.data[0].nasa_id)) {
+          //     image.liked = true;
+          //   }
+          // }
         }
       });
     },
@@ -74,6 +81,9 @@ export default {
       });
 
     },
+    onSearch() {
+      this.loadImages();
+    },
     getUrl(item) {
       let id = item.data[0].nasa_id;
       return `http://images-assets.nasa.gov/image/${id}/${id}~orig.jpg`;
@@ -84,12 +94,16 @@ export default {
     getDesc(item) { 
       return item.data[0].description.substr(0, 250) + '...';
     },
+    getDateCreated(item) {
+      let date = item.data[0].date_created;
+      return moment(date).format('MMMM Do YYYY');
+    },
     onLike(item) {
       let id = item.data[0].nasa_id;
       for (let image of this.images) {
         if (id === image.data[0].nasa_id) {
           image.liked = !image.liked;
-          localStorage.setItem(LIKED_IDS, JSON.stringify(this.likedIds));
+          // localStorage.setItem(LIKED_IDS, JSON.stringify(this.likedIds));
           break;
         }
       }
@@ -97,9 +111,7 @@ export default {
     }
   },
   computed: {
-    likedIds() {
-      return this.images.filter(image => image.liked).map(image => image.data[0].nasa_id);
-    }
+    
   }
 }
 </script>
@@ -122,7 +134,11 @@ a {
   // color: #42b983;
 }
 .navbar-dark .navbar-brand {
-  color: green;
+  color: green !important;
+}
+.search-box {
+  width: 33%;
+  margin-right: 10px;
 }
 .card-deck {
   display: flex;
@@ -153,6 +169,13 @@ a {
 .like-button.liked { 
   svg {
     animation: spin 1s linear 1;
+  }
+}
+.card-footer {
+  display: flex;
+  .date {
+    flex: 1;
+    text-align: right;
   }
 }
 @keyframes spin { 
