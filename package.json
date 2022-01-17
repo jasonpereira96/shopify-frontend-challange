@@ -2,10 +2,13 @@
   "name": "nasa",
   "version": "0.1.0",
   "private": true,
+  "wst": "/",
+  "homepage": "https://github.com/jasonpereira96/shopify-frontend-challange",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "deploy": "node ./node_modules/vue-gh-pages/index.js"
   },
   "dependencies": {
     "axios": "^0.24.0",
